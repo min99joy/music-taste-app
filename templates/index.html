@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>음악 취향 분석 게임</title>
+  <!-- CSS 파일 링크 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-container">
+    <h1 class="main-title">음악 취향 분석 게임</h1>
+
+    <!-- 검색 영역 -->
+    <div class="search-section">
+        <label for="search-input">곡/가수 검색:</label>
+        <input type="text" id="search-input" placeholder="검색어 입력">
+    </div>
+
+    <!-- 자동완성 결과 영역 -->
+    <div id="suggestions" class="suggestions-container">
+        <div id="track-suggestions" class="suggestion-column">
+            <!-- "곡 검색 결과" 헤더와 항목들이 동적으로 추가됨 -->
+        </div>
+        <div id="artist-suggestions" class="suggestion-column">
+            <!-- "가수 검색 결과" 헤더와 항목들이 동적으로 추가됨 -->
+        </div>
+    </div>
+
+    <!-- 아티스트의 곡 리스트 영역 -->
+    <div id="artist-tracks-section" class="section" style="display:none;">
+        <h3>아티스트의 곡들</h3>
+        <div class="artist-tracks-list-container">
+            <div id="artist-tracks" class="autocomplete-suggestions"></div>
+        </div>
+    </div>
+
+    <!-- 최종 선택된 곡 영역 -->
+    <div class="selected-list-section">
+        <h2>선택된 곡</h2>
+        <ul id="selected-list"></ul>
+    </div>
+
+    <!-- MBTI 결과 표시 영역 -->
+    <div id="mbti-result" class="section" style="display:none;">
+        <h2>내 MBTI</h2>
+        <p>결과가 여기에 표시됩니다.</p>
+    </div>
+  </div>
+
+  <!-- jQuery CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <!-- JavaScript 파일 링크 -->
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

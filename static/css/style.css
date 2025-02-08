@@ -1,0 +1,394 @@
+/* 기본 리셋 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+    background-color: #121212; /* 스포티파이 배경색 */
+    color: #FFFFFF; /* 텍스트 흰색 */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* 전체 컨테이너를 화면 중앙에 배치 */
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh; /* 화면 전체 높이에서 중앙 정렬 */
+    width: 100%;
+    max-width: 420px; /* 적절한 최대 너비 설정 */
+    margin: auto;
+    padding: 20px;
+  }
+
+  .main-title {
+    font-size: 2rem;
+    font-weight: bold;
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 30px; /* 아래 여백 추가 */
+  }
+
+  /* 검색 영역 */
+  label {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #B3B3B3;
+  }
+  
+  /* 검색창과 라벨을 감싸는 컨테이너 */
+  .search-section {
+    min-width: -webkit-fill-available;
+  }
+
+  #search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 12px 16px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 50px;
+    background-color: #333333;
+    color: #FFFFFF;
+    margin-bottom: 20px;
+    outline: none;
+    box-sizing: border-box;
+  }
+
+  .selected-list-section{
+    position: absolute;
+    top: 300px;
+    z-index: 10;
+    min-width: 380px;
+  }
+
+  /* 자동완성 컨테이너 */
+  .suggestions-container {
+    visibility: hidden;
+    opacity: 0;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background-color: #282828;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    gap: 20px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+  }
+  
+  /* visible 클래스가 추가되었을 때 */
+  .suggestions-container.visible {
+    visibility: visible;
+    opacity: 1;
+  }
+  
+  /* 각 자동완성 열 */
+  .suggestion-column {
+    flex: 1;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background-color: #333333;
+    border-radius: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: #444444 transparent;
+  }
+  
+  /* 크롬 스크롤 바 커스터마이징 */
+  .suggestion-column::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .suggestion-column::-webkit-scrollbar-thumb {
+    background: #444444;
+    border-radius: 4px;
+  }
+  
+  .suggestion-column::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  /* 자동완성 항목 */
+  .suggestion {
+    padding: 10px;
+    border-radius: 8px;
+    color: #B3B3B3;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  .suggestion:hover {
+    background-color: #1DB954;
+    color: #FFFFFF;
+  }
+
+/* 선택된 곡 리스트 스타일 */
+#selected-list li {
+    list-style: none;
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+    background-color: #282828; /* 기본 배경색 */
+    color: #FFFFFF;
+    border-radius: 5px; /* 모서리 둥글게 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* 그림자 효과 */
+    transition: transform 0.2s ease, background-color 0.3s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 카드 내 앨범 이미지 */
+#selected-list li img {
+    width: 60px;
+    height: 60px;
+    border-radius: 5px 0px 0px 5px;
+    margin-right: 15px;
+    object-fit: cover;
+}
+
+/* 카드 내 텍스트 */
+#selected-list li .track-info {
+    flex: 1; /* 텍스트가 남은 공간을 차지 */
+    font-size: 1rem;
+    color: #FFFFFF;
+    font-weight: bold;
+    z-index: 100;
+}
+
+/* 플레이 버튼 */
+#selected-list li .play-button {
+    background-color: #1DB954; /* 스포티파이 그린 */
+    width: 38px;
+    height: 38px;
+    border-radius: 50%; /* 원형 버튼 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-right: 10px;
+    opacity: 0; /* 투명도 0 */
+    visibility: hidden; /* 보이지 않음 */
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+/* 플레이 버튼 hover */
+#selected-list li .play-button:hover {
+    background-color: rgb(75, 213, 123); /* hover 상태에서 더 밝은 초록색 */
+    transform: scale(1.02);
+    transform-origin: center;
+    transition: ease;
+}
+
+/* hover 상태에서 곡 리스트 카드 스타일 변경 */
+#selected-list li:hover {
+    transform: translateY(-4px); /* 카드가 살짝 떠오름 */
+    background-color: #333333; /* 배경색 변경 */
+}
+/* hover 상태에서 플레이 버튼 보임 */
+#selected-list li:hover .play-button {
+    opacity: 1; /* 투명도 1 */
+    visibility: visible; /* 보이도록 설정 */
+}
+/* 호버 상태에서 플레이 버튼 아이콘 */
+#selected-list li .play-button i {
+    font-size: 1rem;
+    color: #000000;
+    margin: 0 0 0.2px 0.2rem;
+}
+
+  /* 🔹 진행 바 컨테이너 */
+.progress-container {
+    position: absolute;
+    top: 0;
+    left: 60px; /* 🔥 앨범 커버 크기(50px) + 여백(10px) 만큼 이동 */
+    width: calc(100% - 60px); /* 🔥 앨범 커버 오른쪽부터 끝까지 진행 */
+    height: 100%;
+    background-color: transparent;
+    overflow: hidden;
+    pointer-events: none; /* 🔥 진행 바가 마우스 이벤트를 차단하지 않도록 설정 */
+}
+
+/* 🔥 진행 바 (미리 듣기 진행 상태를 시각적으로 표시) */
+.progress-bar {
+    width: 0%;  /* 기본값: 미리 듣기 시작 전 */
+    height: 100%;
+    background-color: #1DB954; /* Spotify 초록색 */
+    opacity: 0.8;
+    transition: width 0.3s linear;  /* 부드러운 애니메이션 */
+}
+
+  /* 아티스트의 곡 리스트 창 (자동완성 창과 동일한 레이아웃) */
+  #artist-tracks-section {
+    visibility: hidden;
+    opacity: 0;
+    position: relative;
+    width: 100%;
+    max-width: 400px;
+    background-color: #282828;
+    border-radius: 10px;
+    padding: 10px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+  }
+  
+  /* visible 클래스가 추가되었을 때 */
+  #artist-tracks-section.visible {
+    visibility: visible;
+    opacity: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #artist-tracks-section.artist-tracks-style {
+    background-color: #282828;
+    border-radius: 10px;
+    padding: 10px;
+    gap: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  /* 아티스트의 곡 리스트를 감싸는 컨테이너 */
+  .artist-tracks-list-container {
+    max-height: 300px; /* 최대 높이 제한 */
+    overflow-y: auto; /* 내부 스크롤 */
+    padding-right: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #444444 transparent;
+  }
+
+  
+
+  /* 크롬 스크롤 바 커스터마이징 */
+  .artist-tracks-list-container::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .artist-tracks-list-container::-webkit-scrollbar-thumb {
+    background: #444444;
+    border-radius: 4px;
+  }
+
+  .artist-tracks-list-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  
+  /* 아티스트 곡 리스트 내 개별 곡 스타일 */
+  #artist-tracks .suggestion {
+    padding: 10px;
+    border-radius: 8px;
+    color: #B3B3B3;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  
+  #artist-tracks .suggestion:hover {
+    background-color: #1DB954;
+    color: #FFFFFF;
+  }
+  
+  /* 결과 섹션 */
+  #mbti-result {
+    text-align: center;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #282828;
+    border-radius: 10px;
+    color: #FFFFFF;
+  }
+  
+  #mbti-result h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+  }
+  
+  #mbti-result p {
+    font-size: 1rem;
+    color: #B3B3B3;
+  }
+  
+  /* 푸터 */
+  .footer {
+    margin-top: 20px;
+    padding: 10px;
+    text-align: center;
+    color: #B3B3B3;
+    font-size: 0.9rem;
+  }
+  
+  /* 결과 페이지 스타일 */
+  .result-section {
+    text-align: center;
+    background-color: #282828;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    color: #FFFFFF;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .result-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: #1DB954;
+  }
+
+  .result-image {
+    max-width: 300px;
+    width: 60%;
+    height: auto;
+    margin: 20px auto;
+    display: block;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  .result-section .group-name {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #FFFFFF;
+    margin: 10px 0;
+  }
+
+  .result-section .group-description {
+    font-size: 1rem;
+    color: #B3B3B3;
+    margin-top: 10px;
+    line-height: 1.6;
+  }
+
+  /* 다시 하기 버튼 */
+  .button-container {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .btn {
+    display: inline-block;
+    background-color: #1DB954;
+    color: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+  }
+
+  .btn:hover {
+    background-color: #17a74a;
+  }

@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>음악 취향 분석 결과</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>음악 취향 분석 결과</h1>
+        </div>
+
+        <div class="result-section">
+            <h2>당신의 음악 유형은?</h2>
+            
+            <!-- 결과 이미지 -->
+            <img src="{{ image_url }}" alt="{{ group }}" class="result-image">
+            
+            <!-- 결과 텍스트 -->
+            <p class="group-name">{{ group }}</p>
+            <p class="group-description">{{ explanation }}</p>
+        </div>
+
+        <div class="button-container">
+            <a href="{{ url_for('index') }}" class="btn">다시 하기</a>
+        </div>
+    </div>
+</body>
+</html>
