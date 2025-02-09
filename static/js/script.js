@@ -1,7 +1,8 @@
 $(document).ready(function () {
     // 전역 변수: 선택된 트랙 ID들을 저장하는 배열
     let selectedTrackIds = [];
-    
+    let currentAudio = null;
+
     const $input = $("#search-input");
     const $suggestions = $("#suggestions"); // 전체 자동완성 컨테이너
     const $trackSuggestions = $("#track-suggestions");
@@ -151,7 +152,6 @@ $(document).ready(function () {
 
         // 선택된 트랙 ID를 배열에 추가
         selectedTrackIds.push(trackData.id);
-
         const previewUrl = trackData.preview_url ? trackData.preview_url : null;
 
         getPreviewUrlFromiTunes(trackData.name, trackData.artist, function (itunesPreviewUrl) {
@@ -181,22 +181,32 @@ $(document).ready(function () {
         });
     }
 
-// play-button 클릭 이벤트 내에서
-$(document).on("click", ".play-button", function () {
-    const $li = $(this).closest("li");
-    const previewUrl = $li.data("preview-url");
-    const $progressBar = $li.find(".progress-bar");
+    // play-button 클릭 이벤트 내에서
+    $(document).on("click", ".play-button", function () {
+        const $li = $(this).closest("li");
+        const previewUrl = $li.data("preview-url");
+        const $progressBar = $li.find(".progress-bar");
 
-    if (!previewUrl) {
-        alert("이 곡은 미리 듣기를 지원하지 않습니다.");
-        return;
-    }
+        if (!previewUrl) {
+            alert("이 곡은 미리 듣기를 지원하지 않습니다.");
+            return;
+        }
 
-    // 기존 재생 중인 오디오가 있으면 정지 및 리셋
-    if (currentAudio) {
-        currentAudio.pause();
-        $(".progress-bar").css("width", "0%");
-    }
+        // 모든 리스트 아이템에서 진행 바 애니메이션 취소
+        $("#selected-list li").each(function() {
+            let id = $(this).data("progressAnimationId");
+            if (id) {
+                cancelAnimationFrame(id);
+                // 해당 아이템의 진행 바 리셋
+                $(this).find(".progress-bar").css("width", "0%");
+                $(this).removeData("progressAnimationId");
+            }
+        });
+
+        // 기존 재생 중인 오디오가 있으면 정지 및 리셋
+        if (currentAudio) {
+            currentAudio.pause();
+        }
 
     // 새로운 오디오 객체 생성 및 재생
     currentAudio = new Audio(previewUrl);
@@ -205,11 +215,20 @@ $(document).on("click", ".play-button", function () {
     // 미리 듣기 기본 길이 (30초)
     const duration = 30;
 
+    // "ended" 이벤트 리스너 추가: 오디오가 끝나면 진행 바 리셋 및 애니메이션 취소
+    currentAudio.addEventListener("ended", function () {
+        $progressBar.css("width", "0%");
+        if (progressAnimationId) {
+            cancelAnimationFrame(progressAnimationId);
+            progressAnimationId = null;
+        }
+        $li.removeData("progressAnimationId");
+    });
+
     // updateProgress 함수를 클릭 이벤트 핸들러 내부에 정의하여 클로저 사용
     function updateProgress() {
         let currentTime = currentAudio.currentTime;
         let progressPercent = (currentTime / duration) * 100;
-
         const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
         const albumCoverWidth = 60; // 앨범 커버(50px) + 여백(10px)
         const progressWidth = trackCardWidth - albumCoverWidth;
@@ -222,14 +241,15 @@ $(document).on("click", ".play-button", function () {
 
         // 재생 중이면 다음 프레임 업데이트
         if (currentTime < duration) {
-            requestAnimationFrame(updateProgress);
+            let id = requestAnimationFrame(updateProgress);
+            $li.data("progressAnimationId", id);
         } else {
             $progressBar.css("width", "0%");
+            $li.removeData("progressAnimationId");
         }
     }
-
-    // requestAnimationFrame을 사용하여 진행 바 업데이트 시작
-    requestAnimationFrame(updateProgress);
+    progressAnimationId = requestAnimationFrame(updateProgress);
+    $li.data("progressAnimationId", progressAnimationId);
 });
 
     // 함수: 선택한 곡 제출
