@@ -181,31 +181,6 @@ $(document).ready(function () {
         });
     }
 
-// 오디오 재생 및 진행 바 업데이트를 위한 함수 정의
-function updateProgress() {
-    // 오디오의 현재 재생 시간 사용
-    let currentTime = currentAudio.currentTime;
-    let progressPercent = (currentTime / duration) * 100;
-    
-    const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
-    const albumCoverWidth = 60; // 앨범 커버 + 여백
-    const progressWidth = trackCardWidth - albumCoverWidth;
-    
-    $progressBar.css({
-        "left": `${albumCoverWidth}px`,
-        "width": `${(progressPercent / 100) * progressWidth}px`,
-        "max-width": `${progressWidth}px`
-    });
-    
-    // 재생 중이면 requestAnimationFrame을 통해 다음 프레임 업데이트
-    if (currentTime < duration) {
-        requestAnimationFrame(updateProgress);
-    } else {
-        // 재생이 끝나면 진행 바 리셋
-        $progressBar.css("width", "0%");
-    }
-}
-
 // play-button 클릭 이벤트 내에서
 $(document).on("click", ".play-button", function () {
     const $li = $(this).closest("li");
@@ -227,13 +202,35 @@ $(document).on("click", ".play-button", function () {
     currentAudio = new Audio(previewUrl);
     currentAudio.play();
 
-    // iTunes 미리 듣기 기본 길이 (30초)
-    let duration = 30;
+    // 미리 듣기 기본 길이 (30초)
+    const duration = 30;
+
+    // updateProgress 함수를 클릭 이벤트 핸들러 내부에 정의하여 클로저 사용
+    function updateProgress() {
+        let currentTime = currentAudio.currentTime;
+        let progressPercent = (currentTime / duration) * 100;
+
+        const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
+        const albumCoverWidth = 60; // 앨범 커버(50px) + 여백(10px)
+        const progressWidth = trackCardWidth - albumCoverWidth;
+
+        $progressBar.css({
+            "left": `${albumCoverWidth}px`,
+            "width": `${(progressPercent / 100) * progressWidth}px`,
+            "max-width": `${progressWidth}px`
+        });
+
+        // 재생 중이면 다음 프레임 업데이트
+        if (currentTime < duration) {
+            requestAnimationFrame(updateProgress);
+        } else {
+            $progressBar.css("width", "0%");
+        }
+    }
 
     // requestAnimationFrame을 사용하여 진행 바 업데이트 시작
     requestAnimationFrame(updateProgress);
 });
-
 
     // 함수: 선택한 곡 제출
     function submitSelectedTracks() {
