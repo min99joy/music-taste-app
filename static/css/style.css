@@ -228,6 +228,8 @@
     background-color: #1DB954; /* Spotify 초록색 */
     opacity: 0.8;
     transition: width 0.3s linear;  /* 부드러운 애니메이션 */
+    will-change: width;          /* 하드웨어 가속 유도 */
+    transform: translateZ(0);     /* GPU 가속 활성화 */
 }
 
   /* 아티스트의 곡 리스트 창 (자동완성 창과 동일한 레이아웃) */

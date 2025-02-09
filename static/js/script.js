@@ -181,57 +181,59 @@ $(document).ready(function () {
         });
     }
 
-    let currentAudio = null;
-    let progressInterval = null; // 진행 상태 업데이트용 인터벌
-
-    $(document).on("click", ".play-button", function () {
-        const $li = $(this).closest("li");
-        const previewUrl = $li.data("preview-url");
-        const $progressBar = $li.find(".progress-bar");
+// 오디오 재생 및 진행 바 업데이트를 위한 함수 정의
+function updateProgress() {
+    // 오디오의 현재 재생 시간 사용
+    let currentTime = currentAudio.currentTime;
+    let progressPercent = (currentTime / duration) * 100;
     
-        if (!previewUrl) {
-            alert("이 곡은 미리 듣기를 지원하지 않습니다.");
-            return;
-        }
+    const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
+    const albumCoverWidth = 60; // 앨범 커버 + 여백
+    const progressWidth = trackCardWidth - albumCoverWidth;
     
-        // 기존 재생 중인 오디오가 있으면 정지
-        if (currentAudio) {
-            currentAudio.pause();
-            $(".progress-bar").css("width", "0%"); // 모든 진행 바 리셋
-            clearInterval(progressInterval);
-        }
-    
-        // 새로운 오디오 객체 생성 및 재생
-        currentAudio = new Audio(previewUrl);
-        currentAudio.play();
-
-        // 진행 바 애니메이션
-        let duration = 30; // iTunes 미리 듣기 기본 길이 (30초)
-        let currentTime = 0;
-
-        progressInterval = setInterval(() => {
-            currentTime += 0.1;
-            let progressPercent = (currentTime / duration) * 100;
-        
-            // 🔥 트랙 카드(li)의 크기와 앨범 커버 크기 가져오기
-            const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
-            const albumCoverWidth = 60; // 🔥 앨범 커버(50px) + 여백(10px)
-            const progressWidth = trackCardWidth - albumCoverWidth; // 🔥 진행 바가 차오를 최대 영역
-        
-            // 🔥 진행 바의 위치 및 크기 조정 (앨범 커버 옆에서 시작)
-            $progressBar.css({
-                "left": `${albumCoverWidth}px`, // 🔥 진행 바 시작 위치
-                "width": `${(progressPercent / 100) * progressWidth}px`, // 🔥 진행 바 크기 조정
-                "max-width": `${progressWidth}px` // 🔥 앨범 커버 오른쪽부터 끝까지 진행하도록 제한
-            });
-        
-            if (currentTime >= duration) {
-                clearInterval(progressInterval);
-                $progressBar.css("width", "0%"); // 재생 종료 시 리셋
-            }
-        }, 100);
-        
+    $progressBar.css({
+        "left": `${albumCoverWidth}px`,
+        "width": `${(progressPercent / 100) * progressWidth}px`,
+        "max-width": `${progressWidth}px`
     });
+    
+    // 재생 중이면 requestAnimationFrame을 통해 다음 프레임 업데이트
+    if (currentTime < duration) {
+        requestAnimationFrame(updateProgress);
+    } else {
+        // 재생이 끝나면 진행 바 리셋
+        $progressBar.css("width", "0%");
+    }
+}
+
+// play-button 클릭 이벤트 내에서
+$(document).on("click", ".play-button", function () {
+    const $li = $(this).closest("li");
+    const previewUrl = $li.data("preview-url");
+    const $progressBar = $li.find(".progress-bar");
+
+    if (!previewUrl) {
+        alert("이 곡은 미리 듣기를 지원하지 않습니다.");
+        return;
+    }
+
+    // 기존 재생 중인 오디오가 있으면 정지 및 리셋
+    if (currentAudio) {
+        currentAudio.pause();
+        $(".progress-bar").css("width", "0%");
+    }
+
+    // 새로운 오디오 객체 생성 및 재생
+    currentAudio = new Audio(previewUrl);
+    currentAudio.play();
+
+    // iTunes 미리 듣기 기본 길이 (30초)
+    let duration = 30;
+
+    // requestAnimationFrame을 사용하여 진행 바 업데이트 시작
+    requestAnimationFrame(updateProgress);
+});
+
 
     // 함수: 선택한 곡 제출
     function submitSelectedTracks() {
