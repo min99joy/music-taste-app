@@ -261,16 +261,26 @@ $(document).ready(function () {
 
     // 함수: 선택한 곡 제출
     function submitSelectedTracks() {
+        // 로딩 화면 보이기
+        $("#loading-overlay").show();
+        
         $.ajax({
             url: "/mbti",
             type: "POST",
             contentType: "application/json",
             data: JSON.stringify({ track_ids: selectedTrackIds }),
             success: function (response) {
+                // 응답 받은 후 로딩 화면 숨기기
+                $("#loading-overlay").hide();
+
+                // 분석 데이터를 localStorage에 저장 (문자열 형태)
+                localStorage.setItem("analysisData", JSON.stringify(response.analysisData));
+
                 const resultUrl = `/result?group=${encodeURIComponent(response.group)}&explanation=${encodeURIComponent(response.explanation)}`;
                 window.location.href = resultUrl;
             },
             error: function () {
+                $("#loading-overlay").hide();
                 alert("MBTI 분류 중 오류가 발생했습니다. 다시 시도해주세요.");
             },
         });

@@ -1,31 +1,77 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>음악 취향 분석 결과</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>음악 취향 분석 결과</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="app-container">
-        <div class="header">
-            <h1>음악 취향 분석 결과</h1>
-        </div>
-
-        <div class="result-section">
-            <h2>당신의 음악 유형은?</h2>
-            
-            <!-- 결과 이미지 -->
-            <img src="{{ image_url }}" alt="{{ group }}" class="result-image">
-            
-            <!-- 결과 텍스트 -->
-            <p class="group-name">{{ group }}</p>
-            <p class="group-description">{{ explanation }}</p>
-        </div>
-
-        <div class="button-container">
-            <a href="{{ url_for('index') }}" class="btn">다시 하기</a>
-        </div>
+  <div class="app-container">
+    <div class="header">
+      <h1>음악 취향 분석 결과</h1>
     </div>
+
+    <div class="result-section">
+      <h2>당신의 음악 취향은?</h2>
+      
+      <!-- 결과 이미지 -->
+      <img src="{{ image_url }}" alt="{{ group }}" class="result-image">
+      
+      <!-- 감성적 결과 문구 -->
+      <p class="group-line">
+        {% if group == "BGM 마스터" %}
+          인생은 영화야. 순간을 즐기는 당신은..
+        {% elif group == "칠 가이" %}
+          그저 chill~ 할 뿐인 당신은..
+        {% elif group == "미식가" %}
+          음악을 세밀히 즐기는 당신은..
+        {% elif group == "클러버" %}
+          둠칫 둠칫 신나는 게 최고인 당신은..
+        {% elif group == "사운드 실험가" %}
+          항상 새로운 것을 추구하는 당신은..
+        {% elif group == "클래식 수호자" %}
+          튜닝의 끝은 순정.. 근본을 좋아하는 당신은..
+        {% else %}
+          당신의 음악 취향은 독특하네요!
+        {% endif %}
+      </p>
+      <p class="group-name">
+        {% if group == "BGM 마스터" %}
+          "BGM 마스터"
+        {% elif group == "칠 가이" %}
+          "칠 가이"
+        {% elif group == "미식가" %}
+          "미식가"
+        {% elif group == "클러버" %}
+          "클러버"
+        {% elif group == "사운드 실험가" %}
+          "사운드 실험가"
+        {% elif group == "클래식 수호자" %}
+          "클래식 수호자"
+        {% else %}
+          "?.?"
+        {% endif %}
+      </p>
+      <!-- 상세 분석 결과 버튼 -->
+      <button class="btn" id="show-analysis">상세 분석 결과</button>
+    </div>
+
+    <div class="button-container">
+      <a href="#" class="btn" id="share-btn">공유하기</a>
+      <a href="{{ url_for('index') }}" class="btn">다시 하기</a>
+    </div>
+  </div>
+
+  <!-- 상세 분석 결과 모달 -->
+  <div id="detailed-analysis">
+    <h3>상세 분석 결과</h3>
+    <canvas id="analysisChart" width="400" height="300"></canvas>
+    <button id="close-analysis">닫기</button>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/result.js') }}"></script>
+
 </body>
 </html>

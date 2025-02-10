@@ -9,6 +9,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
+    <!-- 로딩 화면 (페이지 상단에 추가) -->
+  <div id="loading-overlay" style="display: none;">
+    <h2>음악 취향 분석 중...</h2>
+    <div class="spinner"></div>
+  </div>
+  
   <div class="app-container">
     <h1 class="main-title">음악 취향 분석 게임</h1>
 
@@ -52,6 +58,6 @@
   <!-- jQuery CDN -->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <!-- JavaScript 파일 링크 -->
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/index.js') }}"></script>
 </body>
 </html>

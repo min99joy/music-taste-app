@@ -462,7 +462,26 @@ def classify_music_taste():
             group = predicted_group
         
         explanation = f"당신의 음악 지표: {explanation_details}\n이 기준에 따라, 당신은 '{group}'으로 분류됩니다!"
-        return jsonify({"group": group, "explanation": explanation})
+        # 추가: 분석에 사용된 수치 데이터를 딕셔너리로 구성
+        analysis_data = {
+            "popularity": float(pop_norm.mean()),
+            "duration": float(dur_norm.mean()),
+            "explicit": float(explicit_norm),
+            "tempo": float(tempo_norm),
+            "sentiment": float(sentiment_norm),
+            "release_year_avg": float(avg_release_year_norm),
+            "release_year_diversity": float(release_year_diversity),
+            "genre_diversity": float(genre_diversity_norm),
+            "genre_group_scores": avg_genre_group_scores,  # 예: {"칠 가이": 0.3, ...}
+            "decade_group_scores": avg_decade_group_scores,
+            "final_group_scores": final_group_scores          # 최종 계산된 그룹 점수
+        }
+
+        return jsonify({
+            "group": group,
+            "explanation": explanation,
+            "analysisData": analysis_data
+        })
     except Exception as e:
         app.logger.exception("음악 취향 분류 중 오류 발생")
         return jsonify({"group": "UNKNOWN", "explanation": "분류에 실패했습니다."}), 500
