@@ -208,49 +208,56 @@ $(document).ready(function () {
             currentAudio.pause();
         }
 
-    // 새로운 오디오 객체 생성 및 재생
-    currentAudio = new Audio(previewUrl);
-    currentAudio.play();
+        // 새로운 오디오 객체 생성
+        currentAudio = new Audio(previewUrl);
 
-    // 미리 듣기 기본 길이 (30초)
-    const duration = 30;
+        // 기본값 30초를 미리 지정해두고, 실제 길이가 로드되면 업데이트
+        let duration = 30; // let으로 선언하여 재할당 가능하게 함
 
-    // "ended" 이벤트 리스너 추가: 오디오가 끝나면 진행 바 리셋 및 애니메이션 취소
-    currentAudio.addEventListener("ended", function () {
-        $progressBar.css("width", "0%");
-        if (progressAnimationId) {
-            cancelAnimationFrame(progressAnimationId);
-            progressAnimationId = null;
-        }
-        $li.removeData("progressAnimationId");
-    });
-
-    // updateProgress 함수를 클릭 이벤트 핸들러 내부에 정의하여 클로저 사용
-    function updateProgress() {
-        let currentTime = currentAudio.currentTime;
-        let progressPercent = (currentTime / duration) * 100;
-        const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
-        const albumCoverWidth = 60; // 앨범 커버(50px) + 여백(10px)
-        const progressWidth = trackCardWidth - albumCoverWidth;
-
-        $progressBar.css({
-            "left": `${albumCoverWidth}px`,
-            "width": `${(progressPercent / 100) * progressWidth}px`,
-            "max-width": `${progressWidth}px`
+        // loadedmetadata 이벤트를 통해 실제 duration을 가져옴
+        currentAudio.addEventListener("loadedmetadata", function () {
+            duration = currentAudio.duration;
+            console.log("Audio duration loaded:", duration);
         });
 
-        // 재생 중이면 다음 프레임 업데이트
-        if (currentTime < duration) {
-            let id = requestAnimationFrame(updateProgress);
-            $li.data("progressAnimationId", id);
-        } else {
+        // "ended" 이벤트 리스너 추가: 오디오가 끝나면 진행 바 리셋 및 애니메이션 취소
+        currentAudio.addEventListener("ended", function () {
             $progressBar.css("width", "0%");
+            if (progressAnimationId) {
+                cancelAnimationFrame(progressAnimationId);
+                progressAnimationId = null;
+            }
             $li.removeData("progressAnimationId");
+        });
+
+        currentAudio.play();
+
+        // updateProgress 함수를 클릭 이벤트 핸들러 내부에 정의하여 클로저 사용
+        function updateProgress() {
+            let currentTime = currentAudio.currentTime;
+            let progressPercent = (currentTime / duration) * 100;
+            const trackCardWidth = $li.width(); // 트랙 카드 전체 너비
+            const albumCoverWidth = 60; // 앨범 커버(50px) + 여백(10px)
+            const progressWidth = trackCardWidth - albumCoverWidth;
+
+            $progressBar.css({
+                "left": `${albumCoverWidth}px`,
+                "width": `${(progressPercent / 100) * progressWidth}px`,
+                "max-width": `${progressWidth}px`
+            });
+
+            // 재생 중이면 다음 프레임 업데이트
+            if (currentTime < duration) {
+                let id = requestAnimationFrame(updateProgress);
+                $li.data("progressAnimationId", id);
+            } else {
+                $progressBar.css("width", "0%");
+                $li.removeData("progressAnimationId");
+            }
         }
-    }
-    progressAnimationId = requestAnimationFrame(updateProgress);
-    $li.data("progressAnimationId", progressAnimationId);
-});
+        progressAnimationId = requestAnimationFrame(updateProgress);
+        $li.data("progressAnimationId", progressAnimationId);
+    });
 
     // 함수: 선택한 곡 제출
     function submitSelectedTracks() {
