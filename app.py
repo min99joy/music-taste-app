@@ -20,7 +20,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# 환경 변수에서 Spotify 클라이언트 ID, Secret, 그리고 Genius 토큰 가져오기
+# 환경 변수에서 Spotify 클라이언트 ID, Secret, Genius 토큰 가져오기
 client_id = os.getenv("SPOTIPY_CLIENT_ID")
 client_secret = os.getenv("SPOTIPY_CLIENT_SECRET")
 genius_token = os.getenv("GENIUS_ACCESS_TOKEN")
@@ -48,18 +48,70 @@ logging.basicConfig(level=logging.DEBUG)
 #############################################
 # DECADE_GROUP_WEIGHTS: 발매 연도(데케이드)별 음악적 트렌드를 반영하는 가중치
 #############################################
+# 개선된 DECADE_GROUP_WEIGHTS 예시
+
 DECADE_GROUP_WEIGHTS = {
-    "1960s": {"칠 가이": 0.2, "미식가": 0.3, "BGM 마스터": 0.1, "클러버": 0.1, "사운드 실험가": 0.1, "클래식 수호자": 0.2},
-    "1970s": {"칠 가이": 0.2, "미식가": 0.3, "BGM 마스터": 0.1, "클러버": 0.1, "사운드 실험가": 0.1, "클래식 수호자": 0.2},
-    "1980s": {"칠 가이": 0.25, "미식가": 0.25, "BGM 마스터": 0.15, "클러버": 0.15, "사운드 실험가": 0.1, "클래식 수호자": 0.1},
-    "1990s": {"칠 가이": 0.3, "미식가": 0.2, "BGM 마스터": 0.2, "클러버": 0.1, "사운드 실험가": 0.1, "클래식 수호자": 0.1},
-    "2000s": {"칠 가이": 0.3, "미식가": 0.2, "BGM 마스터": 0.1, "클러버": 0.2, "사운드 실험가": 0.1, "클래식 수호자": 0.1},
-    "2010s": {"칠 가이": 0.3, "미식가": 0.2, "BGM 마스터": 0.1, "클러버": 0.2, "사운드 실험가": 0.1, "클래식 수호자": 0.1},
-    "2020s": {"칠 가이": 0.3, "미식가": 0.2, "BGM 마스터": 0.1, "클러버": 0.2, "사운드 실험가": 0.1, "클래식 수호자": 0.1},
+    "1960s": {
+        "칠 가이": 0.25,       # 차분하고 전통적인 느낌
+        "미식가": 0.25,       # 섬세한 음악 감상
+        "BGM 마스터": 0.15,   # 배경 음악으로 적합
+        "클러버": 0.05,       # 클럽 분위기는 거의 없음
+        "사운드 실험가": 0.05, # 실험적 요소는 미미함
+        "클래식 수호자": 0.25  # 클래식과 전통적 가치 강조
+    },
+    "1970s": {
+        "칠 가이": 0.20,
+        "미식가": 0.20,
+        "BGM 마스터": 0.15,
+        "클러버": 0.20,       # 디스코와 펑크의 등장으로 댄스 분위기 상승
+        "사운드 실험가": 0.10,
+        "클래식 수호자": 0.15
+    },
+    "1980s": {
+        "칠 가이": 0.20,
+        "미식가": 0.20,
+        "BGM 마스터": 0.15,
+        "클러버": 0.25,       # 신스팝, 전자음악의 부상 → 댄스/클럽 분위기 강화
+        "사운드 실험가": 0.10,
+        "클래식 수호자": 0.10
+    },
+    "1990s": {
+        "칠 가이": 0.25,
+        "미식가": 0.15,
+        "BGM 마스터": 0.15,
+        "클러버": 0.25,       # 얼터너티브, 힙합 등으로 클럽 분위기와 에너지 상승
+        "사운드 실험가": 0.10,
+        "클래식 수호자": 0.10
+    },
+    "2000s": {
+        "칠 가이": 0.30,
+        "미식가": 0.20,
+        "BGM 마스터": 0.10,
+        "클러버": 0.20,
+        "사운드 실험가": 0.10,
+        "클래식 수호자": 0.10
+    },
+    "2010s": {
+        "칠 가이": 0.25,
+        "미식가": 0.20,
+        "BGM 마스터": 0.10,
+        "클러버": 0.30,       # EDM과 클럽 문화의 영향
+        "사운드 실험가": 0.10,
+        "클래식 수호자": 0.05
+    },
+    "2020s": {
+        "칠 가이": 0.25,
+        "미식가": 0.20,
+        "BGM 마스터": 0.10,
+        "클러버": 0.25,
+        "사운드 실험가": 0.15,  # 다양한 실험적 음악의 부상
+        "클래식 수호자": 0.05
+    }
 }
 
+
 #############################################
-# [추가] 장르 시드를 동적으로 로드하고 표준화하는 함수들
+# [추가] 장르 시드 및 템포 기대치 로드를 위한 함수들
 #############################################
 
 def normalize_genre(genre):
@@ -69,38 +121,49 @@ def normalize_genre(genre):
     return genre.strip().lower()
 
 def load_genre_seeds():
-    """genre_seeds.json 파일로부터 장르 시드 목록을 불러옴"""
+    """genre_seeds.json 파일로부터 장르 시드 목록과 가중치 매핑을 불러옴"""
     try:
         with open('genre_seeds.json', encoding='utf-8') as f:
             data = json.load(f)
-        return [normalize_genre(g) for g in data.get("genres", [])]
+        mapping = {}
+        for item in data.get("genres", []):
+            if isinstance(item, dict):
+                name = normalize_genre(item.get("name", ""))
+                weights = item.get("weights", {})
+                mapping[name] = weights
+            else:
+                mapping[normalize_genre(item)] = {
+                    "미식가": 0.5,
+                    "칠 가이": 0.5,
+                    "BGM 마스터": 0.3,
+                    "클러버": 0.3,
+                    "사운드 실험가": 0.3,
+                    "클래식 수호자": 0.3
+                }
+        return mapping
     except Exception as e:
         app.logger.exception("장르 시드 로드 실패")
-        return []
+        return {}
 
-def generate_genre_group_weights(genre_list):
-    """
-    각 장르에 대해 기본 그룹 가중치를 할당.
-    이 예시에서는 모든 장르에 대해 '미식가'와 '칠 가이'는 0.5, 기타 그룹은 0.3을 기본값으로 사용합니다.
-    """
-    weights = {}
-    for genre in genre_list:
-        weights[genre] = {
-            "미식가": 0.5,
-            "칠 가이": 0.5,
-            "BGM 마스터": 0.3,
-            "클러버": 0.3,
-            "사운드 실험가": 0.3,
-            "클래식 수호자": 0.3
-        }
-    return weights
+def load_tempo_expectations():
+    """genre_seeds.json 파일에서 각 장르의 템포 기대치를 추출하여 매핑"""
+    try:
+        with open('genre_seeds.json', encoding='utf-8') as f:
+            data = json.load(f)
+        tempo_mapping = {}
+        for item in data.get("genres", []):
+            if isinstance(item, dict):
+                name = normalize_genre(item.get("name", ""))
+                # "tempo" 키가 있으면 가져오고, 없으면 기본값 100 BPM 사용
+                tempo_mapping[name] = item.get("tempo", 100)
+        return tempo_mapping
+    except Exception as e:
+        app.logger.exception("템포 기대치 로드 실패")
+        return {}
 
-# JSON 파일에서 장르 시드 목록을 불러와서 GENRE_GROUP_WEIGHTS를 동적으로 생성
-genre_list = load_genre_seeds()
-if genre_list:
-    GENRE_GROUP_WEIGHTS = generate_genre_group_weights(genre_list)
-else:
-    # JSON 로드 실패 시 기본 하드코딩 값 사용
+# JSON 파일에서 장르 시드와 템포 기대치를 불러옴
+GENRE_GROUP_WEIGHTS = load_genre_seeds()
+if not GENRE_GROUP_WEIGHTS:
     GENRE_GROUP_WEIGHTS = {
         "indie": {"칠 가이": 0.3, "미식가": 0.7, "BGM 마스터": 0.4},
         "indie pop": {"칠 가이": 0.4, "미식가": 0.6, "BGM 마스터": 0.4},
@@ -112,33 +175,26 @@ else:
         "hip hop": {"클러버": 0.7, "사운드 실험가": 0.2},
         "rap": {"클러버": 0.7, "사운드 실험가": 0.2},
         "rock": {"클러버": 0.6, "미식가": 0.3, "BGM 마스터": 0.2},
-        "alt rock": {"클러버": 0.65, "미식가": 0.25, "BGM 마스터": 0.15},
-        "classical": {"클래식 수호자": 0.9, "칠 가이": 0.3},
-        "jazz": {"미식가": 0.7, "칠 가이": 0.3, "BGM 마스터": 0.3},
-        "electronic": {"클러버": 0.6, "사운드 실험가": 0.4, "BGM 마스터": 0.2},
-        "edm": {"클러버": 0.8, "사운드 실험가": 0.3, "BGM 마스터": 0.2},
-        "country": {"클래식 수호자": 0.6, "칠 가이": 0.3, "미식가": 0.2},
     }
 
-#############################################
-# [수정] 기존 함수들: compute_genre_score, compute_tempo_score, get_lyrics_sentiment, compute_genre_group_scores
-#############################################
+TEMPO_EXPECTATIONS = load_tempo_expectations()
 
-def compute_genre_score(genres):
-    scores = []
-    for genre in genres:
-        for key, weight in GENRE_GROUP_WEIGHTS.items():
-            if key in genre:
-                scores.append(weight.get("BGM 마스터", 0.5))
-                break
-    if scores:
-        return sum(scores) / len(scores)
-    return 0.5
+#############################################
+# [수정] 기존 함수들: compute_tempo_score, get_lyrics_sentiment, compute_genre_group_scores
+#############################################
 
 def compute_tempo_score(genres):
-    scores = [0.5 for _ in genres]
-    if scores:
-        return sum(scores) / len(scores)
+    """각 장르의 예상 BPM 값을 TEMPO_EXPECTATIONS에서 참조하여 평균 BPM을 계산한 후, 0~1 범위로 정규화하여 반환"""
+    tempos = []
+    for genre in genres:
+        norm_genre = normalize_genre(genre)
+        if norm_genre in TEMPO_EXPECTATIONS:
+            tempos.append(TEMPO_EXPECTATIONS[norm_genre])
+    if tempos:
+        avg_bpm = sum(tempos) / len(tempos)
+        # 예를 들어 BPM 범위를 60~140으로 가정하고 정규화 (실제 범위는 필요에 따라 조정)
+        normalized_tempo = (avg_bpm - 60) / (140 - 60)
+        return normalized_tempo
     return 0.5
 
 def get_lyrics_sentiment(track_title, artist_name):
@@ -153,12 +209,16 @@ def get_lyrics_sentiment(track_title, artist_name):
         return 0
 
 def compute_genre_group_scores(genres):
+    """
+    입력된 장르 리스트를 순회하면서, 각 장르에 해당하는 그룹별 가중치를 누적한 후,
+    각 그룹별 평균 가중치를 딕셔너리로 반환합니다.
+    """
     group_scores = {
-        "칠 가이": 0, 
-        "미식가": 0, 
-        "BGM 마스터": 0, 
-        "클러버": 0, 
-        "사운드 실험가": 0, 
+        "칠 가이": 0,
+        "미식가": 0,
+        "BGM 마스터": 0,
+        "클러버": 0,
+        "사운드 실험가": 0,
         "클래식 수호자": 0
     }
     total_keyword_matches = 0
@@ -256,19 +316,19 @@ def classify_music_taste():
         genre_scores = []
         
         total_genre_group_scores = {
-            "칠 가이": 0, 
-            "미식가": 0, 
-            "BGM 마스터": 0, 
-            "클러버": 0, 
-            "사운드 실험가": 0, 
+            "칠 가이": 0,
+            "미식가": 0,
+            "BGM 마스터": 0,
+            "클러버": 0,
+            "사운드 실험가": 0,
             "클래식 수호자": 0
         }
         total_decade_group_scores = {
-            "칠 가이": 0, 
-            "미식가": 0, 
-            "BGM 마스터": 0, 
-            "클러버": 0, 
-            "사운드 실험가": 0, 
+            "칠 가이": 0,
+            "미식가": 0,
+            "BGM 마스터": 0,
+            "클러버": 0,
+            "사운드 실험가": 0,
             "클래식 수호자": 0
         }
         
@@ -309,10 +369,10 @@ def classify_music_taste():
                             genres = artist_detail.get("genres", [])
                             genres = [normalize_genre(g) for g in genres]
                             artist_genre_cache[primary_artist_id] = genres
-                        single_genre_score = compute_genre_group_scores(genres)
-                        genre_scores.append(np.mean(list(single_genre_score.values())))
-                        tempo_score = compute_tempo_score(genres)
                         group_scores = compute_genre_group_scores(genres)
+                        # genre_scores에 각 그룹별 평균 가중치의 단순 평균 값을 저장 (종합 지표로 활용)
+                        genre_scores.append(np.mean(list(group_scores.values())))
+                        tempo_score = compute_tempo_score(genres)
                         for group in total_genre_group_scores:
                             total_genre_group_scores[group] += group_scores.get(group, 0)
                 tempo_list.append(tempo_score)
@@ -362,7 +422,7 @@ def classify_music_taste():
                                   for group in total_decade_group_scores}
         
         alpha = 0.6
-        beta = 1.0
+        beta = 1.0  # 미식가 그룹에 대해 장르 다양성 반영 보정 상수
         final_group_scores = {}
         for group in total_genre_group_scores:
             score = alpha * avg_genre_group_scores[group] + (1 - alpha) * avg_decade_group_scores[group]
@@ -417,15 +477,10 @@ def result():
         "BGM 마스터": "static/images/bgm_master.png",
         "클러버": "static/images/clubber.png",
         "사운드 실험가": "static/images/sound_explorer.png",
-        "클래식 수호자": "static/images/classic_guardian.png",
+        "클래식 수호자": "static/images/classic_guardian.png"
     }
     image_url = images.get(group, "static/images/default.png")
-    return render_template(
-        "result.html",
-        group=group,
-        explanation=explanation,
-        image_url=image_url
-    )
+    return render_template("result.html", group=group, explanation=explanation, image_url=image_url)
 
 if __name__ == "__main__":
     app.run(debug=True)
